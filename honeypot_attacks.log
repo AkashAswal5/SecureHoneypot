@@ -1,0 +1,2 @@
+2025-04-01 15:32:17,167 - logger - INFO - Attack detected - IP: 172.31.128.70, Service: HTTP-Landing, Type: Initial Reconnaissance
+[2025-04-01T15:32:17.167518] 172.31.128.70:80 - HTTP-Landing - Initial Reconnaissance - HTTP honeypot landing page access - User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/118.0.5993.88 Safari/537.36
