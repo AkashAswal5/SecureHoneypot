@@ -1,0 +1,106 @@
+/* Custom CSS styles for the honeypot dashboard */
+
+/* Dark theme enhancements */
+body {
+    padding-bottom: 70px; /* Space for the footer */
+}
+
+/* Custom card styling */
+.card {
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 20px;
+}
+
+/* Table enhancements */
+.table-dark {
+    background-color: transparent;
+    color: #f8f9fa;
+}
+
+.table-dark thead {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.table-dark td, .table-dark th {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Badges for attack types */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+/* Pre for log data */
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Dashboard stats */
+.stats-card {
+    transition: transform 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Notification toast container */
+.toast-container {
+    z-index: 1050;
+}
+
+/* Footer styling */
+.footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+/* Custom scrollbar for tables */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #343a40;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background-color: #6c757d;
+    border-radius: 4px;
+}
+
+/* Animation for alerts */
+.alert {
+    animation: fadein 0.5s;
+}
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .table th, .table td {
+        padding: 0.5rem;
+    }
+}

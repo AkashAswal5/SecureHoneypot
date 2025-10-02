@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Guide - SecureServer v2.1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .content-box {
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 15px 0;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #777;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SecureServer v2.1 Setup Guide</h1>
+        
+        <div class="content-box">
+            <h2>Installation</h2>
+            <p>Follow these steps to set up SecureServer:</p>
+            <ol>
+                <li>Make sure you have PHP 7.4 or newer installed</li>
+                <li>Configure your MySQL database (see Database Setup section)</li>
+                <li>Upload all files to your web server</li>
+                <li>Navigate to the admin panel at <code>/admin.html</code></li>
+                <li>Login with default credentials (see below)</li>
+                <li><strong>Important:</strong> Change default credentials immediately!</li>
+            </ol>
+            
+            <div class="warning">
+                <strong>Warning:</strong> This setup guide contains sensitive information. Make sure to delete this file after setup is complete.
+            </div>
+        </div>
+        
+        <div class="content-box">
+            <h2>Database Setup</h2>
+            <p>Create a MySQL database and import the schema from <code>db_schema.sql</code></p>
+            
+            <h3>Database Configuration</h3>
+            <p>Edit the <code>config.php</code> file with your database details:</p>
+            <pre><code>define('DB_HOST', 'localhost');
+define('DB_NAME', 'secure_server_db');
+define('DB_USER', 'root');
+define('DB_PASSWORD', 'your_password_here');
+</code></pre>
+            
+            <h3>Default Access Credentials</h3>
+            <table>
+                <tr>
+                    <th>Service</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                </tr>
+                <tr>
+                    <td>Admin Panel</td>
+                    <td>admin</td>
+                    <td>admin123</td>
+                </tr>
+                <tr>
+                    <td>MySQL Database</td>
+                    <td>root</td>
+                    <td>password123</td>
+                </tr>
+                <tr>
+                    <td>FTP Server</td>
+                    <td>ftpuser</td>
+                    <td>ftppass123</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="content-box">
+            <h2>API Endpoints</h2>
+            <p>The server exposes the following API endpoints:</p>
+            <ul>
+                <li><code>/api/users</code> - List all users (GET)</li>
+                <li><code>/api/users/{id}</code> - Get specific user (GET)</li>
+                <li><code>/api/users/create</code> - Create new user (POST)</li>
+                <li><code>/api/logs</code> - Get server logs (GET, requires admin)</li>
+                <li><code>/api/config</code> - Get server configuration (GET, requires admin)</li>
+                <li><code>/api/execute</code> - Run remote command (POST, requires admin)</li>
+            </ul>
+            
+            <h3>Example API Usage</h3>
+            <pre><code># Get all users
+curl -X GET http://your-server/api/users
+
+# Create new user
+curl -X POST http://your-server/api/users/create \
+  -H "Content-Type: application/json" \
+  -d '{"username":"newuser","password":"password123","email":"user@example.com"}'
+
+# Execute command (admin only)
+curl -X POST http://your-server/api/execute \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {admin_token}" \
+  -d '{"command":"ls -la"}'
+</code></pre>
+        </div>
+        
+        <div class="content-box">
+            <h2>Security Recommendations</h2>
+            <ol>
+                <li>Change all default passwords immediately after installation</li>
+                <li>Enable HTTPS and enforce SSL</li>
+                <li>Restrict access to the admin panel by IP</li>
+                <li>Configure server firewall rules</li>
+                <li>Regularly update the server software</li>
+                <li>Backup your database regularly</li>
+            </ol>
+        </div>
+        
+        <div class="footer">
+            <p><a href="index.html">Home</a> | <a href="admin.html">Admin Panel</a> | <a href="phpmyadmin/">Database</a></p>
+            <p>SecureServer v2.1 | Copyright © 2023</p>
+        </div>
+    </div>
+</body>
+</html>

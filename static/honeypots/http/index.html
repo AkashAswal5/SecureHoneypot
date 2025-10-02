@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Default Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            overflow: hidden;
+            padding: 20px;
+        }
+        header {
+            background: #35424a;
+            color: white;
+            padding: 20px;
+            min-height: 70px;
+            border-bottom: #e8491d 3px solid;
+        }
+        header h1 {
+            margin: 0;
+        }
+        .main-content {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        footer {
+            background: #35424a;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .info-box {
+            background: #f9f9f9;
+            border-left: 3px solid #3498db;
+            padding: 10px;
+            margin: 20px 0;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 3px solid #ffc107;
+            padding: 10px;
+            margin: 20px 0;
+        }
+        h2 {
+            color: #35424a;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Server Default Page</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <h2>Welcome to SecureServer v2.1</h2>
+            
+            <div class="info-box">
+                <p>This is the default page for this server. The server is running and properly configured.</p>
+            </div>
+            
+            <p>If you're seeing this page, it means:</p>
+            <ul>
+                <li>The web server is working correctly</li>
+                <li>No website content has been uploaded yet</li>
+                <li>The server administrator needs to upload website files to the document root</li>
+            </ul>
+            
+            <h2>Server Information</h2>
+            <ul>
+                <li><strong>Server Software:</strong> SecureServer v2.1</li>
+                <li><strong>Server OS:</strong> Linux (Debian 11)</li>
+                <li><strong>PHP Version:</strong> 7.4.30</li>
+                <li><strong>MySQL Version:</strong> 8.0.28</li>
+            </ul>
+            
+            <div class="warning-box">
+                <p><strong>Security Notice:</strong> This is a default page. Please replace it with your actual website content and remove default pages to enhance security.</p>
+            </div>
+            
+            <h2>Quick Links</h2>
+            <ul>
+                <li><a href="admin.html">Administration Panel</a></li>
+                <li><a href="phpmyadmin/">Database Administration</a></li>
+                <li><a href="setup.html">Setup Guide</a></li>
+            </ul>
+            
+            <h2>Looking for Help?</h2>
+            <p>If you're the server administrator and need assistance:</p>
+            <ul>
+                <li>Check the <a href="setup.html">Setup Guide</a> for basic configuration</li>
+                <li>Email <a href="mailto:support@example.com">support@example.com</a> for technical help</li>
+                <li>Visit <a href="https://docs.example.com">our documentation</a> for detailed information</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>SecureServer v2.1 Default Page | Copyright &copy; 2023</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,6 @@
+id,name,email,credit_card,ssn,address,phone
+1001,John Smith,john.smith@example.com,4532-XXXX-XXXX-7412,123-XX-7890,"123 Main St, Anytown, USA",555-123-4567
+1002,Jane Doe,jane.doe@example.com,5678-XXXX-XXXX-1234,456-XX-1234,"456 Oak Ave, Somewhere, USA",555-234-5678
+1003,Robert Johnson,robert.j@example.com,6011-XXXX-XXXX-8901,789-XX-4561,"789 Pine St, Nowhere, USA",555-345-6789
+1004,Mary Williams,mary.w@example.com,4111-XXXX-XXXX-5678,012-XX-7892,"101 Cedar Ln, Anywhere, USA",555-456-7890
+1005,Michael Brown,michael.b@example.com,3782-XXXX-XXXX-0123,345-XX-1238,"202 Elm St, Everywhere, USA",555-567-8901

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system-configuration>
+  <server-info>
+    <name>PROD-WEB01</name>
+    <environment>production</environment>
+    <version>3.5.2</version>
+    <last-updated>2023-08-12T03:15:22Z</last-updated>
+  </server-info>
+  
+  <network>
+    <hostname>web1.example.com</hostname>
+    <ip-address>10.0.1.5</ip-address>
+    <subnet-mask>255.255.255.0</subnet-mask>
+    <gateway>10.0.1.1</gateway>
+    <dns-servers>
+      <primary>10.0.1.2</primary>
+      <secondary>8.8.8.8</secondary>
+    </dns-servers>
+  </network>
+  
+  <security>
+    <firewall enabled="true">
+      <allow-ports>
+        <port number="22" protocol="tcp" description="SSH"/>
+        <port number="80" protocol="tcp" description="HTTP"/>
+        <port number="443" protocol="tcp" description="HTTPS"/>
+        <port number="3306" protocol="tcp" description="MySQL" restricted="true"/>
+      </allow-ports>
+      <rules>
+        <rule id="1" action="allow" source="10.0.1.0/24" destination="any" service="any"/>
+        <rule id="2" action="allow" source="any" destination="10.0.1.5" service="http,https"/>
+        <rule id="3" action="allow" source="10.0.1.10" destination="10.0.1.5" service="mysql"/>
+        <rule id="4" action="deny" source="any" destination="any" service="any"/>
+      </rules>
+    </firewall>
+    
+    <ssh>
+      <allow-root-login>false</allow-root-login>
+      <password-authentication>false</password-authentication>
+      <key-authentication>true</key-authentication>
+      <allowed-users>
+        <user>admin</user>
+        <user>deploy</user>
+      </allowed-users>
+    </ssh>
+  </security>
+  
+  <database>
+    <type>mysql</type>
+    <host>db.internal.example.com</host>
+    <port>3306</port>
+    <name>prod_app_db</name>
+    <username>app_user</username>
+    <password>DbP@ssw0rd2023!</password> <!-- TODO: Move to secure storage -->
+    <max-connections>100</max-connections>
+    <backup-schedule>daily</backup-schedule>
+  </database>
+  
+  <web-server>
+    <type>apache</type>
+    <version>2.4.41</version>
+    <document-root>/var/www/html</document-root>
+    <error-log>/var/log/apache2/error.log</error-log>
+    <access-log>/var/log/apache2/access.log</access-log>
+    
+    <virtual-hosts>
+      <host>
+        <domain>www.example.com</domain>
+        <document-root>/var/www/example</document-root>
+        <ssl enabled="true">
+          <certificate>/etc/ssl/certs/example.com.crt</certificate>
+          <key>/etc/ssl/private/example.com.key</key>
+        </ssl>
+      </host>
+      <host>
+        <domain>admin.example.com</domain>
+        <document-root>/var/www/admin</document-root>
+        <ssl enabled="true">
+          <certificate>/etc/ssl/certs/admin.example.com.crt</certificate>
+          <key>/etc/ssl/private/admin.example.com.key</key>
+        </ssl>
+        <basic-auth enabled="true">
+          <auth-name>Administrative Area</auth-name>
+          <auth-file>/etc/apache2/.htpasswd</auth-file>
+        </basic-auth>
+      </host>
+    </virtual-hosts>
+  </web-server>
+  
+  <application>
+    <name>Example Web Application</name>
+    <version>2.1.0</version>
+    <environment-variables>
+      <variable name="APP_ENV">production</variable>
+      <variable name="APP_DEBUG">false</variable>
+      <variable name="APP_KEY">base64:HjYCUHFh84zEEkfpvXRZJyGLCLWFG34L82fdajkdRxc=</variable>
+      <variable name="JWT_SECRET">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.secret-key-value-do-not-share</variable>
+      <variable name="STRIPE_API_KEY">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</variable>
+    </environment-variables>
+    <cron-jobs>
+      <job>
+        <name>database-backup</name>
+        <schedule>0 0 * * *</schedule>
+        <command>/usr/local/bin/backup-db.sh</command>
+      </job>
+      <job>
+        <name>log-rotation</name>
+        <schedule>0 2 * * *</schedule>
+        <command>/usr/sbin/logrotate /etc/logrotate.conf</command>
+      </job>
+    </cron-jobs>
+  </application>
+  
+  <monitoring>
+    <service>New Relic</service>
+    <api-key>cda5493e12bf56dd4fe6f15a2d4b7ac03f8461e0</api-key>
+    <check-interval>60</check-interval>
+    <alert-email>alerts@example.com</alert-email>
+  </monitoring>
+</system-configuration>

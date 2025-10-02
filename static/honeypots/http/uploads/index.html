@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File Upload Center</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .file-list {
+            margin-top: 30px;
+        }
+        .file-item {
+            padding: 10px;
+            background: #f9f9f9;
+            margin-bottom: 5px;
+            border-left: 3px solid #2196F3;
+        }
+        .warning {
+            color: #e74c3c;
+            padding: 10px;
+            background: #fadbd8;
+            border-radius: 3px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>File Upload Center</h1>
+        
+        <div class="warning">
+            <strong>Directory Listing Enabled:</strong> This is a temporary upload directory for internal use. Do not store sensitive files here.
+        </div>
+        
+        <div class="upload-area">
+            <h3>Upload Files</h3>
+            <form enctype="multipart/form-data" method="post" action="upload.php">
+                <input type="file" name="fileToUpload" id="fileToUpload">
+                <br><br>
+                <input type="submit" value="Upload File" name="submit">
+            </form>
+        </div>
+        
+        <div class="file-list">
+            <h3>Current Files</h3>
+            
+            <div class="file-item">backup-2023-08-15.zip (1.2 MB)</div>
+            <div class="file-item">database-credentials.txt (0.5 KB)</div>
+            <div class="file-item">server-config.xml (4.3 KB)</div>
+            <div class="file-item">admin-notes.md (1.8 KB)</div>
+            <div class="file-item">security-scan-results.pdf (2.1 MB)</div>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 0.8em; color: #777;">
+            <p>Upload service v1.2 | Contact <a href="mailto:sysadmin@example.com">sysadmin@example.com</a> for support</p>
+            <p>Note: Files are automatically deleted after 48 hours.</p>
+            <p>WARNING: File execution is enabled for .php files for testing purposes - disable before production!</p>
+        </div>
+    </div>
+</body>
+</html>

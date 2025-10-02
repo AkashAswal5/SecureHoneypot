@@ -1,0 +1,75 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@example.com",
+      "password_hash": "$2a$10$XEKNGJx1HWA5.bCLXQZdD.iX3vFJDGEdWLN.kfHm.vB7aI/cDtH1C",
+      "role": "administrator",
+      "last_login": "2023-08-15T08:24:15Z",
+      "created_at": "2023-01-01T00:00:00Z",
+      "account_status": "active"
+    },
+    {
+      "id": 2,
+      "username": "john.doe",
+      "email": "john.doe@example.com",
+      "password_hash": "$2a$10$9uiHm3pvnA2G.zXV85Lo.OYPWmEtb4t3oVZ3x.ZeJKT3Hs9ZYVzHe",
+      "role": "user",
+      "last_login": "2023-08-14T19:12:43Z",
+      "created_at": "2023-01-15T14:22:31Z",
+      "account_status": "active"
+    },
+    {
+      "id": 3,
+      "username": "jane.smith",
+      "email": "jane.smith@example.com",
+      "password_hash": "$2a$10$SHJ3RXI9TLN0KV24LfG0BeZ0XYBZRwO6U1Y4ZfAPTFVDzNEQP0Edm",
+      "role": "moderator",
+      "last_login": "2023-08-15T12:05:22Z",
+      "created_at": "2023-02-10T09:45:17Z",
+      "account_status": "active"
+    },
+    {
+      "id": 4,
+      "username": "mark.wilson",
+      "email": "mark.wilson@example.com",
+      "password_hash": "$2a$10$Q3X6iXl2QLKAMGo9JVoSR.YUZ3ufVi/OQZdnrEXXY1QFNZJPsVm2C",
+      "role": "user",
+      "last_login": "2023-08-10T08:32:11Z",
+      "created_at": "2023-03-20T16:18:45Z",
+      "account_status": "suspended",
+      "suspension_reason": "Multiple policy violations"
+    },
+    {
+      "id": 5,
+      "username": "sarah.jackson",
+      "email": "sarah.jackson@example.com",
+      "password_hash": "$2a$10$kJsf5j2DbJ9Jl4/u.ZvnxeMlUZGP2r0SAZ7KWGVBhLFXYmJ3iYK96",
+      "role": "user",
+      "last_login": "2023-08-14T22:45:01Z",
+      "created_at": "2023-04-05T10:29:56Z",
+      "account_status": "active"
+    },
+    {
+      "id": 6,
+      "username": "system_backup",
+      "email": "backup@example.com",
+      "password_hash": "$2a$10$HD74/O5nvvOaWA5pXUf3/uK0g94PFgYtmndTfX3vCY4vIFYhm4vYu",
+      "role": "system",
+      "last_login": "2023-08-15T00:30:00Z",
+      "created_at": "2023-01-01T00:00:00Z",
+      "account_status": "active",
+      "api_key": "bkp_UHJvZHVjdGlvbkJhY2t1cEtleQ=="
+    }
+  ],
+  "metadata": {
+    "total_users": 6,
+    "active_users": 5,
+    "suspended_users": 1,
+    "last_updated": "2023-08-15T00:30:05Z",
+    "backup_id": "user_backup_20230815003005",
+    "schema_version": "1.2.0"
+  },
+  "_notes": "This is a backup file. Password hashes are in bcrypt format. DO NOT MODIFY manually."
+}

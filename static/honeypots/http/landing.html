@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureServer Honeypot System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            background-color: #1a1a1a;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: #2c3e50;
+            text-align: center;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .subtitle {
+            color: #bdc3c7;
+            margin-top: 0.5rem;
+        }
+        .content-box {
+            background: #2d2d2d;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        h1, h2, h3 {
+            color: #3498db;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 2rem 0;
+        }
+        .feature-box {
+            background: #333;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: transform 0.3s;
+        }
+        .feature-box:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #3498db;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .cta-button:hover {
+            background: #2980b9;
+        }
+        footer {
+            background: #2c3e50;
+            text-align: center;
+            padding: 1.5rem 0;
+            margin-top: 2rem;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .warning {
+            background-color: #e74c3c;
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        code {
+            background: #444;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 class="logo">CyberHoneypot</h1>
+            <p class="subtitle">Advanced Threat Detection System</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="content-box">
+            <h2>Welcome to Your Honeypot System</h2>
+            <p>This is a sophisticated honeypot system designed to detect, analyze, and track potential threats to your network infrastructure. By simulating vulnerable services, we can gather valuable intelligence on attack vectors and methodologies.</p>
+            
+            <div class="warning">
+                <strong>Security Notice:</strong> This system is intended for cybersecurity research and threat intelligence gathering. Unauthorized access to this system is prohibited and all activities are logged.
+            </div>
+        </div>
+
+        <div class="content-box">
+            <h2>System Capabilities</h2>
+            <div class="features">
+                <div class="feature-box">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Real-time Monitoring</h3>
+                    <p>Continuous monitoring of all attack attempts with detailed logging and analysis.</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">🌎</div>
+                    <h3>Geographic Tracking</h3>
+                    <p>Track the origin of attacks with precise geolocation data and visual mapping.</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">🔔</div>
+                    <h3>Instant Alerts</h3>
+                    <p>Receive immediate notifications when suspicious activities are detected.</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">📊</div>
+                    <h3>Advanced Analytics</h3>
+                    <p>Comprehensive statistics and visualization of attack patterns and trends.</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Threat Intelligence</h3>
+                    <p>Detailed intelligence gathering on attack methodologies and sources.</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-icon">📱</div>
+                    <h3>Multi-channel Alerts</h3>
+                    <p>Configurable alerts via email, SMS, and webhook integrations.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-box">
+            <h2>Quick Access</h2>
+            <div class="text-center">
+                <p>Navigate to the system dashboard to view attack statistics and configure your honeypot services:</p>
+                <a href="/admin.html" class="cta-button">Admin Panel</a>
+                <a href="/phpmyadmin/" class="cta-button">Database Access</a>
+                <a href="/setup.html" class="cta-button">Setup Guide</a>
+            </div>
+            
+            <h3 style="margin-top: 30px;">System Resources</h3>
+            <div class="text-center">
+                <a href="/login.php" class="cta-button">User Login</a>
+                <a href="/search.php" class="cta-button">Product Search</a>
+                <a href="/user.php?id=1" class="cta-button">User Profiles</a>
+                <a href="/backup/" class="cta-button">System Backups</a>
+                <a href="/uploads/" class="cta-button">File Uploads</a>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background-color: #2d2d2d; border-radius: 5px; text-align: left;">
+                <h4 style="color: #e74c3c; margin-top: 0;">Development Notes</h4>
+                <p>• Make sure to fix the SQL injection in search.php before production!</p>
+                <p>• The admin account uses default credentials (admin/password123)</p>
+                <p>• Need to secure the /backup and /uploads directories</p>
+                <p>• XSS vulnerability in login.php error parameter needs fixing</p>
+                <p>• SQL injection in user.php?id=X should be patched soon</p>
+                <p>• Test URLs: 
+                    <code>/login.php?error=&lt;script&gt;alert('XSS')&lt;/script&gt;</code><br>
+                    <code>/search.php?q='OR'1'='1</code><br>
+                    <code>/user.php?id=1'OR'1'='1</code>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>CyberHoneypot System v2.1 | &copy; 2023 Security Research Team</p>
+        </div>
+    </footer>
+</body>
+</html>
