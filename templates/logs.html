@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card bg-dark mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="fas fa-list"></i> Attack Logs</h4>
+        <div>
+            <a href="/export/csv" class="btn btn-sm btn-info me-1">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+            <a href="/export/json" class="btn btn-sm btn-info me-2">
+                <i class="fas fa-file-code"></i> Export JSON
+            </a>
+            <button class="btn btn-sm btn-success me-1" id="refreshLogsBtn">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <form method="post" action="/clear_logs" class="d-inline" onsubmit="return confirm('Are you sure you want to clear all logs?');">
+                <button type="submit" class="btn btn-sm btn-danger">
+                    <i class="fas fa-trash-alt"></i> Clear Logs
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text" id="search-addon">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" id="logSearchInput" placeholder="Search logs..." aria-label="Search" aria-describedby="search-addon">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Filter</button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item filter-option" data-filter="all" href="#">All Attacks</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item filter-option" data-filter="service" href="#">By Service</a></li>
+                    <li><a class="dropdown-item filter-option" data-filter="ip" href="#">By IP Address</a></li>
+                    <li><a class="dropdown-item filter-option" data-filter="attack_type" href="#">By Attack Type</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover table-dark" id="logsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Timestamp</th>
+                        <th>Source IP</th>
+                        <th>Service</th>
+                        <th>Port</th>
+                        <th>Attack Type</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if logs %}
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.id }}</td>
+                            <td>{{ log.timestamp }}</td>
+                            <td>{{ log.source_ip }}</td>
+                            <td>{{ log.service }}</td>
+                            <td>{{ log.port }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if log.attack_type == 'SQL Injection' %}bg-danger
+                                    {% elif log.attack_type == 'Command Injection' %}bg-warning
+                                    {% elif log.attack_type == 'Cross-Site Scripting (XSS)' %}bg-info
+                                    {% elif log.attack_type == 'Brute Force' %}bg-primary
+                                    {% elif log.attack_type == 'Reconnaissance' %}bg-secondary
+                                    {% else %}bg-light text-dark
+                                    {% endif %}">
+                                    {{ log.attack_type }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info view-details-btn" data-log-id="{{ log.id }}" data-bs-toggle="modal" data-bs-target="#logDetailsModal">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">No attack logs found</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Log Details Modal -->
+<div class="modal fade" id="logDetailsModal" tabindex="-1" aria-labelledby="logDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logDetailsModalLabel">Attack Log Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs mb-3" id="logDetailsTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic-info" type="button" role="tab" aria-controls="basic-info" aria-selected="true">Basic Info</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="geo-tab" data-bs-toggle="tab" data-bs-target="#geo-info" type="button" role="tab" aria-controls="geo-info" aria-selected="false">Geolocation</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="threat-tab" data-bs-toggle="tab" data-bs-target="#threat-info" type="button" role="tab" aria-controls="threat-info" aria-selected="false">Threat Intel</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="payload-tab" data-bs-toggle="tab" data-bs-target="#payload-info" type="button" role="tab" aria-controls="payload-info" aria-selected="false">Payload</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="logDetailsTabContent">
+                    <!-- Basic Info Tab -->
+                    <div class="tab-pane fade show active" id="basic-info" role="tabpanel" aria-labelledby="basic-tab">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>ID:</strong> <span id="detail-id"></span></p>
+                                <p><strong>Timestamp:</strong> <span id="detail-timestamp"></span></p>
+                                <p><strong>Source IP:</strong> <span id="detail-ip"></span></p>
+                                <p><strong>Service:</strong> <span id="detail-service"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Port:</strong> <span id="detail-port"></span></p>
+                                <p><strong>Attack Type:</strong> <span id="detail-attack-type"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Geolocation Tab -->
+                    <div class="tab-pane fade" id="geo-info" role="tabpanel" aria-labelledby="geo-tab">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Country:</strong> <span id="detail-country">Not available</span></p>
+                                <p><strong>City:</strong> <span id="detail-city">Not available</span></p>
+                                <p><strong>ISP:</strong> <span id="detail-isp">Not available</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>ASN:</strong> <span id="detail-asn">Not available</span></p>
+                                <p><strong>Latitude:</strong> <span id="detail-latitude">0</span></p>
+                                <p><strong>Longitude:</strong> <span id="detail-longitude">0</span></p>
+                            </div>
+                        </div>
+                        <div class="mt-3" id="detail-map" style="height: 200px;">
+                            <!-- Map will be rendered here if coordinates are available -->
+                        </div>
+                    </div>
+                    
+                    <!-- Threat Intel Tab -->
+                    <div class="tab-pane fade" id="threat-info" role="tabpanel" aria-labelledby="threat-tab">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-3" id="risk-score-gauge">
+                                        <span class="badge bg-secondary p-2" style="font-size: 18px;" id="detail-risk-score">0</span>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">Risk Score</h5>
+                                        <p class="mb-0" id="detail-risk-label">Unknown</p>
+                                    </div>
+                                </div>
+                                
+                                <p><strong>Known Attacker:</strong> <span id="detail-known-attacker">No</span></p>
+                                <p><strong>Threat Type:</strong> <span id="detail-threat-type">Unknown</span></p>
+                                <p><strong>Last Seen:</strong> <span id="detail-last-seen">Never</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payload Tab -->
+                    <div class="tab-pane fade" id="payload-info" role="tabpanel" aria-labelledby="payload-tab">
+                        <h6>Payload Data:</h6>
+                        <pre class="bg-dark border p-3" id="detail-data"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include Leaflet for mapping -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script>
+    let detailMap;
+    let detailMarker;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle view details button clicks
+        const viewDetailsButtons = document.querySelectorAll('.view-details-btn');
+        
+        viewDetailsButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const logId = this.getAttribute('data-log-id');
+                
+                // Find the log entry in the table
+                const row = this.closest('tr');
+                const id = row.cells[0].textContent;
+                const timestamp = row.cells[1].textContent;
+                const ip = row.cells[2].textContent;
+                const service = row.cells[3].textContent;
+                const port = row.cells[4].textContent;
+                const attackType = row.cells[5].textContent.trim();
+                
+                // Reset tabs
+                document.querySelector('#basic-tab').click();
+                
+                // Fetch the full log data via AJAX
+                fetch('/api/logs')
+                    .then(response => response.json())
+                    .then(logs => {
+                        const log = logs.find(l => l.id == logId);
+                        
+                        if (log) {
+                            // Populate basic info
+                            document.getElementById('detail-id').textContent = id;
+                            document.getElementById('detail-timestamp').textContent = timestamp;
+                            document.getElementById('detail-ip').textContent = ip;
+                            document.getElementById('detail-service').textContent = service;
+                            document.getElementById('detail-port').textContent = port;
+                            document.getElementById('detail-attack-type').textContent = attackType;
+                            document.getElementById('detail-data').textContent = log.data || 'No payload data captured';
+                            
+                            // Populate geolocation data if available
+                            const geo = log.geo || {};
+                            if (geo) {
+                                document.getElementById('detail-country').textContent = geo.country || 'Unknown';
+                                document.getElementById('detail-city').textContent = geo.city || 'Unknown';
+                                document.getElementById('detail-isp').textContent = geo.isp || 'Unknown';
+                                document.getElementById('detail-asn').textContent = geo.asn || 'Unknown';
+                                document.getElementById('detail-latitude').textContent = geo.latitude || 0;
+                                document.getElementById('detail-longitude').textContent = geo.longitude || 0;
+                                
+                                // Initialize or update map
+                                const lat = geo.latitude || 0;
+                                const lng = geo.longitude || 0;
+                                
+                                if (lat && lng && lat !== 0 && lng !== 0) {
+                                    if (!detailMap) {
+                                        // Initialize map
+                                        detailMap = L.map('detail-map').setView([lat, lng], 10);
+                                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                        }).addTo(detailMap);
+                                        detailMarker = L.marker([lat, lng]).addTo(detailMap);
+                                    } else {
+                                        // Update map
+                                        detailMap.setView([lat, lng], 10);
+                                        detailMarker.setLatLng([lat, lng]);
+                                    }
+                                    
+                                    // Force map redraw when tab is shown
+                                    document.getElementById('geo-tab').addEventListener('shown.bs.tab', function() {
+                                        detailMap.invalidateSize();
+                                    });
+                                } else {
+                                    document.getElementById('detail-map').innerHTML = '<div class="alert alert-info">No valid coordinates available for this IP address.</div>';
+                                }
+                            }
+                            
+                            // Populate threat intelligence data if available
+                            const threat = log.threat_intel || {};
+                            if (threat) {
+                                const riskScore = threat.risk_score || 0;
+                                document.getElementById('detail-risk-score').textContent = riskScore;
+                                document.getElementById('detail-known-attacker').textContent = threat.is_known_attacker ? 'Yes' : 'No';
+                                document.getElementById('detail-threat-type').textContent = threat.threat_type || 'Unknown';
+                                document.getElementById('detail-last-seen').textContent = threat.last_seen || 'Never';
+                                
+                                // Set risk score badge color
+                                const riskBadge = document.getElementById('detail-risk-score');
+                                const riskLabel = document.getElementById('detail-risk-label');
+                                
+                                if (riskScore < 25) {
+                                    riskBadge.className = 'badge bg-success p-2';
+                                    riskLabel.textContent = 'Low Risk';
+                                } else if (riskScore < 50) {
+                                    riskBadge.className = 'badge bg-info p-2';
+                                    riskLabel.textContent = 'Medium Risk';
+                                } else if (riskScore < 75) {
+                                    riskBadge.className = 'badge bg-warning p-2';
+                                    riskLabel.textContent = 'High Risk';
+                                } else {
+                                    riskBadge.className = 'badge bg-danger p-2';
+                                    riskLabel.textContent = 'Critical Risk';
+                                }
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching log details:', error);
+                        document.getElementById('detail-data').textContent = 'Error loading data';
+                    });
+            });
+        });
+        
+        // Handle search input
+        const searchInput = document.getElementById('logSearchInput');
+        searchInput.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const table = document.getElementById('logsTable');
+            const rows = table.getElementsByTagName('tr');
+            
+            // Start from index 1 to skip the header row
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const rowText = row.textContent.toLowerCase();
+                
+                if (rowText.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+        
+        // Handle refresh button
+        const refreshButton = document.getElementById('refreshLogsBtn');
+        refreshButton.addEventListener('click', function() {
+            location.reload();
+        });
+        
+        // Handle filter options
+        const filterOptions = document.querySelectorAll('.filter-option');
+        filterOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const filterType = this.getAttribute('data-filter');
+                
+                if (filterType === 'all') {
+                    // Show all rows
+                    const rows = document.querySelectorAll('#logsTable tbody tr');
+                    rows.forEach(row => {
+                        row.style.display = '';
+                    });
+                } else {
+                    // Ask user for filter value
+                    let filterPrompt = '';
+                    
+                    if (filterType === 'service') {
+                        filterPrompt = 'Enter service name (ssh, ftp, telnet, etc.):';
+                    } else if (filterType === 'ip') {
+                        filterPrompt = 'Enter IP address:';
+                    } else if (filterType === 'attack_type') {
+                        filterPrompt = 'Enter attack type (SQL Injection, Brute Force, etc.):';
+                    }
+                    
+                    const filterValue = prompt(filterPrompt);
+                    if (filterValue !== null) {
+                        applyFilter(filterType, filterValue.toLowerCase());
+                    }
+                }
+            });
+        });
+        
+        function applyFilter(filterType, filterValue) {
+            const table = document.getElementById('logsTable');
+            const rows = table.getElementsByTagName('tr');
+            
+            // Column indices for different filter types
+            const columnMap = {
+                'service': 3,
+                'ip': 2,
+                'attack_type': 5
+            };
+            
+            const columnIndex = columnMap[filterType];
+            
+            // Start from index 1 to skip the header row
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cell = row.cells[columnIndex];
+                
+                if (cell && cell.textContent.toLowerCase().includes(filterValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

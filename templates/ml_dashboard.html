@@ -1,0 +1,797 @@
+{% extends 'base.html' %}
+
+{% block title %}ML Analytics Dashboard{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<style>
+  .ml-card {
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    height: 100%;
+  }
+  
+  .ml-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .prediction-card {
+    border-left: 4px solid var(--bs-primary);
+  }
+  
+  .anomaly-card {
+    border-left: 4px solid var(--bs-danger);
+  }
+  
+  .report-card {
+    border-left: 4px solid var(--bs-success);
+  }
+  
+  .visualization-card {
+    border-left: 4px solid var(--bs-info);
+  }
+  
+  .card-header {
+    font-weight: bold;
+    padding: 1rem;
+  }
+  
+  .visualization-container {
+    position: relative;
+    height: 300px;
+    margin-bottom: 20px;
+  }
+  
+  .anomaly-table {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .prediction-chart-container {
+    height: 300px;
+  }
+  
+  .spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(33, 37, 41, 0.7);
+    z-index: 10;
+  }
+  
+  .attack-pattern-list {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .progress-label {
+    position: absolute;
+    right: 10px;
+    top: 0;
+    font-size: 0.8rem;
+  }
+  
+  .badge-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  
+  /* Custom tooltip styling */
+  .custom-tooltip {
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 4px;
+    color: white;
+    padding: 8px;
+    font-size: 12px;
+    max-width: 200px;
+    z-index: 1000;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Machine Learning Analytics</h1>
+    <div>
+      <button id="refreshBtn" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-clockwise"></i> Refresh Data
+      </button>
+    </div>
+  </div>
+  
+  <div class="alert alert-info" id="mlInfoAlert">
+    <i class="bi bi-info-circle-fill"></i> 
+    Machine learning models are analyzing your honeypot data to detect anomalies and predict attack trends.
+    <span id="dataStatus"></span>
+  </div>
+  
+  <div class="alert alert-danger d-none" id="mlErrorAlert">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span id="errorMessage"></span>
+  </div>
+  
+  <div class="row mb-4">
+    <!-- Anomaly Detection Card -->
+    <div class="col-lg-6 mb-4">
+      <div class="card ml-card anomaly-card h-100">
+        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+          <div>
+            <i class="bi bi-exclamation-triangle"></i> Anomaly Detection
+          </div>
+          <div>
+            <span class="badge bg-danger" id="anomalyCount">0</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="anomalySpinner" class="spinner-container">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+          <div id="noAnomalyData" class="text-center py-5 d-none">
+            <i class="bi bi-search" style="font-size: 3rem;"></i>
+            <p class="mt-3">No anomalies detected in your current data.</p>
+            <p class="text-muted">The more attack data you collect, the better the anomaly detection will work.</p>
+          </div>
+          <div id="anomalyData" class="d-none">
+            <div class="anomaly-table">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Source IP</th>
+                    <th>Service</th>
+                    <th>Attack Type</th>
+                    <th>Explanation</th>
+                  </tr>
+                </thead>
+                <tbody id="anomalyTableBody">
+                  <!-- Anomaly data will be inserted here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-transparent">
+          <small class="text-muted">Using Isolation Forest algorithm to detect unusual attack patterns</small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Attack Prediction Card -->
+    <div class="col-lg-6 mb-4">
+      <div class="card ml-card prediction-card h-100">
+        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+          <div>
+            <i class="bi bi-graph-up"></i> Attack Trend Prediction
+          </div>
+          <div>
+            <select id="predictionServiceSelect" class="form-select form-select-sm">
+              <option value="">All Services</option>
+              <!-- Service options will be added dynamically -->
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="predictionSpinner" class="spinner-container">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+          <div id="noPredictionData" class="text-center py-5 d-none">
+            <i class="bi bi-bar-chart" style="font-size: 3rem;"></i>
+            <p class="mt-3">Not enough data for prediction.</p>
+            <p class="text-muted">At least 24 hours of attack data is needed to predict trends.</p>
+          </div>
+          <div id="predictionData" class="d-none">
+            <div class="prediction-chart-container">
+              <canvas id="predictionChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-transparent d-flex justify-content-between">
+          <small class="text-muted">Using LSTM neural network to predict attack patterns</small>
+          <small id="predictionTimestamp" class="text-muted"></small>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row mb-4">
+    <!-- Attack Pattern Report Card -->
+    <div class="col-lg-6 mb-4">
+      <div class="card ml-card report-card h-100">
+        <div class="card-header bg-transparent">
+          <i class="bi bi-journal-text"></i> Attack Pattern Report
+        </div>
+        <div class="card-body">
+          <div id="reportSpinner" class="spinner-container">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+          <div id="noReportData" class="text-center py-5 d-none">
+            <i class="bi bi-clipboard-data" style="font-size: 3rem;"></i>
+            <p class="mt-3">No attack data available for analysis.</p>
+            <p class="text-muted">Attack pattern report will be generated when data is available.</p>
+          </div>
+          <div id="reportData" class="d-none">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="card">
+                  <div class="card-body">
+                    <h6 class="card-title">Attack Overview</h6>
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Total Attacks
+                        <span class="badge bg-primary rounded-pill" id="totalAttacks">0</span>
+                      </li>
+                      <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Unique IPs
+                        <span class="badge bg-primary rounded-pill" id="uniqueIPs">0</span>
+                      </li>
+                      <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Attack Types
+                        <span class="badge bg-primary rounded-pill" id="attackTypes">0</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="card">
+                  <div class="card-body">
+                    <h6 class="card-title">Attack Patterns</h6>
+                    <div class="attack-pattern-list">
+                      <div id="attackPatterns">
+                        <!-- Attack patterns will be inserted here -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col-12">
+                <h6>Top Attacker IPs</h6>
+                <div class="badge-container" id="topAttackers">
+                  <!-- Top attackers will be inserted here -->
+                </div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col-12">
+                <h6>Most Active Times</h6>
+                <div class="d-flex flex-wrap">
+                  <div class="me-4">
+                    <small class="text-muted">Day of Week</small>
+                    <div id="attacksByDay" class="mt-1">
+                      <!-- Attacks by day will be inserted here -->
+                    </div>
+                  </div>
+                  <div>
+                    <small class="text-muted">Hour of Day</small>
+                    <div id="attacksByHour" class="mt-1">
+                      <!-- Attacks by hour will be inserted here -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-transparent">
+          <small id="reportTimestamp" class="text-muted"></small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Visualizations Card -->
+    <div class="col-lg-6 mb-4">
+      <div class="card ml-card visualization-card h-100">
+        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+          <div>
+            <i class="bi bi-bar-chart-line"></i> ML Visualizations
+          </div>
+          <div>
+            <select id="visualizationSelect" class="form-select form-select-sm">
+              <option value="attack_types">Attack Types</option>
+              <option value="hourly_attacks">Hourly Distribution</option>
+              <option value="service_attacks">Service Distribution</option>
+              <option value="attack_service_heatmap">Attack/Service Heatmap</option>
+              <option value="attack_trend">Attack Trend</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="visualizationSpinner" class="spinner-container">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+          <div id="noVisualizationData" class="text-center py-5 d-none">
+            <i class="bi bi-pie-chart" style="font-size: 3rem;"></i>
+            <p class="mt-3">No data available for visualization.</p>
+            <p class="text-muted">Visualizations will be generated when attack data is available.</p>
+          </div>
+          <div id="visualizationData" class="d-none">
+            <div class="visualization-container">
+              <img id="visualizationImage" class="img-fluid" alt="ML Visualization" style="max-width: 100%;">
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-transparent">
+          <small id="visualizationTimestamp" class="text-muted"></small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize
+    loadAllData();
+    
+    // Event listeners
+    document.getElementById('refreshBtn').addEventListener('click', loadAllData);
+    document.getElementById('predictionServiceSelect').addEventListener('change', loadPredictionData);
+    document.getElementById('visualizationSelect').addEventListener('change', updateVisualization);
+    
+    // Set up auto-refresh every 5 minutes
+    setInterval(loadAllData, 300000);
+    
+    // Function to load all data sections
+    function loadAllData() {
+      loadAnomalyData();
+      loadPredictionData();
+      loadReportData();
+      loadVisualizationData();
+      loadServicesList();
+    }
+    
+    // Load services for prediction dropdown
+    function loadServicesList() {
+      fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+          const serviceSelect = document.getElementById('predictionServiceSelect');
+          // Keep the "All Services" option
+          const allOption = serviceSelect.options[0];
+          // Clear other options
+          serviceSelect.innerHTML = '';
+          serviceSelect.appendChild(allOption);
+          
+          // Add service options
+          if (data.services) {
+            Object.keys(data.services).forEach(service => {
+              const option = document.createElement('option');
+              option.value = service;
+              option.textContent = service;
+              serviceSelect.appendChild(option);
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error loading services:', error);
+        });
+    }
+    
+    // Load anomaly detection data
+    function loadAnomalyData() {
+      showSpinner('anomaly');
+      
+      fetch('/api/ml/anomalies')
+        .then(response => response.json())
+        .then(data => {
+          hideSpinner('anomaly');
+          
+          if (data.error) {
+            showError(data.error);
+            return;
+          }
+          
+          const anomalyCount = document.getElementById('anomalyCount');
+          const anomalyTableBody = document.getElementById('anomalyTableBody');
+          
+          // Update anomaly count
+          anomalyCount.textContent = data.anomalies_found;
+          
+          if (data.anomalies && data.anomalies.length > 0) {
+            // Show anomaly data and hide no data message
+            document.getElementById('anomalyData').classList.remove('d-none');
+            document.getElementById('noAnomalyData').classList.add('d-none');
+            
+            // Clear previous data
+            anomalyTableBody.innerHTML = '';
+            
+            // Add anomaly rows
+            data.anomalies.forEach(anomaly => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${formatDateTime(anomaly.timestamp)}</td>
+                <td>${anomaly.source_ip}</td>
+                <td>${anomaly.service}</td>
+                <td>${anomaly.attack_type}</td>
+                <td>${anomaly.anomaly_explanation || 'Unusual pattern detected'}</td>
+              `;
+              anomalyTableBody.appendChild(row);
+            });
+          } else {
+            // Show no data message
+            document.getElementById('anomalyData').classList.add('d-none');
+            document.getElementById('noAnomalyData').classList.remove('d-none');
+          }
+          
+          // Update data status
+          updateDataStatus(`Analyzed ${data.total_logs_analyzed} logs for anomalies.`);
+        })
+        .catch(error => {
+          hideSpinner('anomaly');
+          showError('Failed to load anomaly data: ' + error.message);
+          console.error('Error loading anomaly data:', error);
+        });
+    }
+    
+    // Load prediction data
+    function loadPredictionData() {
+      showSpinner('prediction');
+      
+      const serviceSelect = document.getElementById('predictionServiceSelect');
+      const selectedService = serviceSelect.value;
+      const serviceParam = selectedService ? `?service=${selectedService}` : '';
+      
+      fetch(`/api/ml/predict_trends${serviceParam}`)
+        .then(response => response.json())
+        .then(data => {
+          hideSpinner('prediction');
+          
+          if (data.error) {
+            // If not enough data, show specific message
+            if (data.error.includes('Not enough data')) {
+              document.getElementById('predictionData').classList.add('d-none');
+              document.getElementById('noPredictionData').classList.remove('d-none');
+            } else {
+              showError(data.error);
+            }
+            return;
+          }
+          
+          // Show prediction data and hide no data message
+          document.getElementById('predictionData').classList.remove('d-none');
+          document.getElementById('noPredictionData').classList.add('d-none');
+          
+          // Update prediction chart
+          renderPredictionChart(data.predictions);
+          
+          // Update timestamp
+          document.getElementById('predictionTimestamp').textContent = 
+            `Prediction for ${data.service} - ${formatDateTime(new Date())}`;
+        })
+        .catch(error => {
+          hideSpinner('prediction');
+          showError('Failed to load prediction data: ' + error.message);
+          console.error('Error loading prediction data:', error);
+        });
+    }
+    
+    // Load attack pattern report
+    function loadReportData() {
+      showSpinner('report');
+      
+      fetch('/api/ml/attack_report')
+        .then(response => response.json())
+        .then(data => {
+          hideSpinner('report');
+          
+          if (data.error) {
+            showError(data.error);
+            return;
+          }
+          
+          // Show report data and hide no data message
+          document.getElementById('reportData').classList.remove('d-none');
+          document.getElementById('noReportData').classList.add('d-none');
+          
+          // Update report data
+          document.getElementById('totalAttacks').textContent = data.total_attacks;
+          document.getElementById('uniqueIPs').textContent = data.unique_ips;
+          document.getElementById('attackTypes').textContent = data.unique_attack_types;
+          
+          // Update attack patterns
+          const attackPatternsDiv = document.getElementById('attackPatterns');
+          attackPatternsDiv.innerHTML = '';
+          
+          if (data.top_attack_types) {
+            const attackTypes = Object.entries(data.top_attack_types)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 5);
+            
+            attackTypes.forEach(([type, count]) => {
+              const div = document.createElement('div');
+              div.className = 'd-flex justify-content-between align-items-center mb-2';
+              
+              const progress = Math.round((count / data.total_attacks) * 100);
+              div.innerHTML = `
+                <div class="me-2 text-truncate" style="max-width: 60%;" title="${type}">${type}</div>
+                <div class="flex-grow-1 position-relative">
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" role="progressbar" style="width: ${progress}%"></div>
+                  </div>
+                  <span class="progress-label">${count}</span>
+                </div>
+              `;
+              attackPatternsDiv.appendChild(div);
+            });
+          }
+          
+          // Update top attackers
+          const topAttackersDiv = document.getElementById('topAttackers');
+          topAttackersDiv.innerHTML = '';
+          
+          if (data.top_attacker_ips) {
+            Object.entries(data.top_attacker_ips)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 8)
+              .forEach(([ip, count]) => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-secondary me-1 mb-1';
+                badge.innerHTML = `${ip} <span class="badge bg-light text-dark">${count}</span>`;
+                topAttackersDiv.appendChild(badge);
+              });
+          }
+          
+          // Update attacks by day
+          const attacksByDayDiv = document.getElementById('attacksByDay');
+          attacksByDayDiv.innerHTML = '';
+          
+          if (data.attacks_by_day) {
+            const dayEntries = Object.entries(data.attacks_by_day);
+            const maxDayCount = Math.max(...dayEntries.map(([, count]) => count));
+            
+            const dayAbbreviations = {
+              'Monday': 'Mon', 'Tuesday': 'Tue', 'Wednesday': 'Wed', 
+              'Thursday': 'Thu', 'Friday': 'Fri', 'Saturday': 'Sat', 'Sunday': 'Sun'
+            };
+            
+            const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            
+            // Sort days in correct order
+            dayEntries.sort((a, b) => dayOrder.indexOf(a[0]) - dayOrder.indexOf(b[0]));
+            
+            dayEntries.forEach(([day, count]) => {
+              const intensity = Math.round((count / maxDayCount) * 100);
+              const badge = document.createElement('span');
+              badge.className = 'badge me-1 mb-1';
+              badge.style.backgroundColor = `rgba(13, 110, 253, ${intensity / 100})`;
+              badge.title = `${day}: ${count} attacks`;
+              badge.textContent = dayAbbreviations[day] || day;
+              attacksByDayDiv.appendChild(badge);
+            });
+          }
+          
+          // Update attacks by hour
+          const attacksByHourDiv = document.getElementById('attacksByHour');
+          attacksByHourDiv.innerHTML = '';
+          
+          if (data.attacks_by_hour) {
+            const hourEntries = Object.entries(data.attacks_by_hour);
+            const maxHourCount = Math.max(...hourEntries.map(([, count]) => count));
+            
+            // Ensure hours are in order 0-23
+            const orderedHours = {};
+            for (let i = 0; i < 24; i++) {
+              orderedHours[i] = data.attacks_by_hour[i] || 0;
+            }
+            
+            Object.entries(orderedHours).forEach(([hour, count]) => {
+              const intensity = Math.round((count / maxHourCount) * 100);
+              const badge = document.createElement('span');
+              badge.className = 'badge me-1 mb-1';
+              badge.style.backgroundColor = `rgba(13, 110, 253, ${intensity / 100})`;
+              badge.title = `${hour}:00: ${count} attacks`;
+              badge.textContent = hour;
+              attacksByHourDiv.appendChild(badge);
+            });
+          }
+          
+          // Update timestamp
+          document.getElementById('reportTimestamp').textContent = 
+            `Generated: ${formatDateTime(data.generated_at || new Date())}`;
+        })
+        .catch(error => {
+          hideSpinner('report');
+          showError('Failed to load report data: ' + error.message);
+          console.error('Error loading report data:', error);
+        });
+    }
+    
+    // Load visualization data
+    function loadVisualizationData() {
+      showSpinner('visualization');
+      
+      fetch('/api/ml/visualizations')
+        .then(response => response.json())
+        .then(data => {
+          hideSpinner('visualization');
+          
+          if (data.error) {
+            showError(data.error);
+            return;
+          }
+          
+          // Store visualization data globally
+          window.visualizationData = data.visualizations;
+          
+          if (data.visualizations && Object.keys(data.visualizations).length > 0) {
+            // Show visualization data and hide no data message
+            document.getElementById('visualizationData').classList.remove('d-none');
+            document.getElementById('noVisualizationData').classList.add('d-none');
+            
+            // Update timestamp
+            document.getElementById('visualizationTimestamp').textContent = 
+              `Generated: ${formatDateTime(data.timestamp || new Date())}`;
+            
+            // Update visualization
+            updateVisualization();
+          } else {
+            // Show no data message
+            document.getElementById('visualizationData').classList.add('d-none');
+            document.getElementById('noVisualizationData').classList.remove('d-none');
+          }
+        })
+        .catch(error => {
+          hideSpinner('visualization');
+          showError('Failed to load visualization data: ' + error.message);
+          console.error('Error loading visualization data:', error);
+        });
+    }
+    
+    // Update visualization based on selected type
+    function updateVisualization() {
+      if (!window.visualizationData) {
+        return;
+      }
+      
+      const visualizationSelect = document.getElementById('visualizationSelect');
+      const selectedType = visualizationSelect.value;
+      
+      if (window.visualizationData[selectedType]) {
+        const img = document.getElementById('visualizationImage');
+        img.src = window.visualizationData[selectedType];
+        img.alt = `${selectedType.replace(/_/g, ' ')} Visualization`;
+      }
+    }
+    
+    // Render prediction chart
+    function renderPredictionChart(predictions) {
+      const ctx = document.getElementById('predictionChart').getContext('2d');
+      
+      // Destroy existing chart if it exists
+      if (window.predictionChart) {
+        window.predictionChart.destroy();
+      }
+      
+      // Prepare data
+      const labels = predictions.map(p => new Date(p.timestamp));
+      const data = predictions.map(p => p.predicted_attacks);
+      
+      // Create chart
+      window.predictionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Predicted Attacks',
+            data: data,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'hour',
+                displayFormats: {
+                  hour: 'HH:mm'
+                },
+                tooltipFormat: 'MMM d, HH:mm'
+              },
+              title: {
+                display: true,
+                text: 'Time'
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Predicted Attack Count'
+              },
+              ticks: {
+                precision: 0
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            },
+            legend: {
+              display: true
+            }
+          }
+        }
+      });
+    }
+    
+    // Helper function to format date time
+    function formatDateTime(dateStr) {
+      const date = dateStr instanceof Date ? dateStr : new Date(dateStr);
+      return date.toLocaleString();
+    }
+    
+    // Show spinner for a section
+    function showSpinner(section) {
+      const spinner = document.getElementById(`${section}Spinner`);
+      if (spinner) {
+        spinner.classList.remove('d-none');
+      }
+    }
+    
+    // Hide spinner for a section
+    function hideSpinner(section) {
+      const spinner = document.getElementById(`${section}Spinner`);
+      if (spinner) {
+        spinner.classList.add('d-none');
+      }
+    }
+    
+    // Show error message
+    function showError(message) {
+      const errorAlert = document.getElementById('mlErrorAlert');
+      const errorMessage = document.getElementById('errorMessage');
+      
+      errorMessage.textContent = message;
+      errorAlert.classList.remove('d-none');
+      
+      // Hide after 10 seconds
+      setTimeout(() => {
+        errorAlert.classList.add('d-none');
+      }, 10000);
+    }
+    
+    // Update data status info
+    function updateDataStatus(message) {
+      const dataStatus = document.getElementById('dataStatus');
+      dataStatus.textContent = message;
+    }
+  });
+</script>
+{% endblock %}

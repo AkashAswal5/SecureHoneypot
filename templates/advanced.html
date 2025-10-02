@@ -1,0 +1,532 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-chart-bar"></i> Advanced Analytics Dashboard</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    This dashboard provides advanced analytics and insights about the attacks detected by your honeypot services.
+                </p>
+                {% if not have_geolite %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> GeoLite2 databases not found. Geolocation features will use a public API with limited requests.
+                    <p class="mb-0 mt-2">For better performance, download GeoLite2 City and ASN databases from MaxMind and place them in the project root.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-dark">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-globe"></i> Attack World Map</h5>
+                <div>
+                    <button class="btn btn-sm btn-info" id="refreshMapBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="worldMap" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Attack Risk Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="riskScoreChart" width="100%" height="250"></canvas>
+                <div class="row mt-3">
+                    <div class="col-md-3 col-6">
+                        <div class="card bg-success mb-2">
+                            <div class="card-body p-2 text-center">
+                                <h3 id="low-risk-count">0</h3>
+                                <p class="mb-0">Low Risk</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="card bg-info mb-2">
+                            <div class="card-body p-2 text-center">
+                                <h3 id="medium-risk-count">0</h3>
+                                <p class="mb-0">Medium Risk</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="card bg-warning mb-2">
+                            <div class="card-body p-2 text-center">
+                                <h3 id="high-risk-count">0</h3>
+                                <p class="mb-0">High Risk</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="card bg-danger mb-2">
+                            <div class="card-body p-2 text-center">
+                                <h3 id="critical-risk-count">0</h3>
+                                <p class="mb-0">Critical Risk</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-code"></i> Attack Types</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="attackTypesChart" width="100%" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-flag"></i> Geographic Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="countryDistributionChart" width="100%" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clock"></i> Hourly Attack Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="hourlyDistributionChart" width="100%" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-secret"></i> Top Attackers</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-dark">
+                        <thead>
+                            <tr>
+                                <th>IP Address</th>
+                                <th>Country</th>
+                                <th>Attack Count</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-attackers-table">
+                            <tr>
+                                <td colspan="3" class="text-center">No data available</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card bg-dark">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-download"></i> Export Data</h5>
+            </div>
+            <div class="card-body">
+                <p>Export your attack data in various formats for further analysis:</p>
+                <a href="/export/csv" class="btn btn-primary me-2">
+                    <i class="fas fa-file-csv"></i> Export as CSV
+                </a>
+                <a href="/export/json" class="btn btn-primary">
+                    <i class="fas fa-file-code"></i> Export as JSON
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include Leaflet for mapping -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script>
+    let worldMap;
+    let mapMarkers = [];
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the map
+        initializeMap();
+        
+        // Load advanced stats data
+        loadAdvancedStats();
+        
+        // Set up auto-refresh every 30 seconds
+        setInterval(loadAdvancedStats, 30000);
+        
+        // Set up manual refresh button
+        document.getElementById('refreshMapBtn').addEventListener('click', function() {
+            loadThreatMap();
+        });
+    });
+    
+    function initializeMap() {
+        // Initialize the world map
+        worldMap = L.map('worldMap').setView([20, 0], 2);
+        
+        // Add the tile layer (map background)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(worldMap);
+        
+        // Load threat map data
+        loadThreatMap();
+    }
+    
+    function loadThreatMap() {
+        fetch('/api/threat_map')
+            .then(response => response.json())
+            .then(data => {
+                // Clear existing markers
+                mapMarkers.forEach(marker => {
+                    worldMap.removeLayer(marker);
+                });
+                mapMarkers = [];
+                
+                // Add new markers
+                data.forEach(attack => {
+                    const marker = L.marker([attack.latitude, attack.longitude]).addTo(worldMap);
+                    
+                    // Create popup content
+                    const popupContent = `
+                        <strong>IP:</strong> ${attack.ip}<br>
+                        <strong>Country:</strong> ${attack.country}<br>
+                        <strong>Attack Type:</strong> ${attack.attack_type}<br>
+                        <strong>Service:</strong> ${attack.service}<br>
+                        <strong>Time:</strong> ${formatDateTime(attack.timestamp)}
+                    `;
+                    
+                    marker.bindPopup(popupContent);
+                    mapMarkers.push(marker);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading threat map data:', error);
+            });
+    }
+    
+    function loadAdvancedStats() {
+        fetch('/api/advanced_stats')
+            .then(response => response.json())
+            .then(data => {
+                updateAttackTypesChart(data.attack_types);
+                updateCountryDistributionChart(data.country_distribution);
+                updateHourlyDistributionChart(data.hourly_distribution);
+                updateRiskScoreChart(data.risk_score_distribution);
+                updateTopAttackersTable(data.top_attackers);
+            })
+            .catch(error => {
+                console.error('Error loading advanced stats:', error);
+            });
+    }
+    
+    function updateAttackTypesChart(attackTypes) {
+        const ctx = document.getElementById('attackTypesChart').getContext('2d');
+        
+        // Convert data for Chart.js
+        const labels = Object.keys(attackTypes);
+        const values = Object.values(attackTypes);
+        
+        // Generate colors
+        const colors = generateColors(labels.length);
+        
+        // Destroy existing chart if it exists
+        if (window.attackTypesChart) {
+            window.attackTypesChart.destroy();
+        }
+        
+        // Create new chart
+        window.attackTypesChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: 'white'
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Attack Types Distribution',
+                        color: 'white'
+                    }
+                }
+            }
+        });
+    }
+    
+    function updateCountryDistributionChart(countryData) {
+        const ctx = document.getElementById('countryDistributionChart').getContext('2d');
+        
+        // Get top 10 countries by attack count
+        const sortedCountries = Object.entries(countryData)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+        
+        const labels = sortedCountries.map(entry => entry[0]);
+        const values = sortedCountries.map(entry => entry[1]);
+        
+        // Generate colors
+        const colors = generateColors(labels.length);
+        
+        // Destroy existing chart if it exists
+        if (window.countryDistributionChart) {
+            window.countryDistributionChart.destroy();
+        }
+        
+        // Create new chart
+        window.countryDistributionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Attack Count',
+                    data: values,
+                    backgroundColor: colors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'white'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'white'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Top 10 Countries by Attack Count',
+                        color: 'white'
+                    }
+                }
+            }
+        });
+    }
+    
+    function updateHourlyDistributionChart(hourlyData) {
+        const ctx = document.getElementById('hourlyDistributionChart').getContext('2d');
+        
+        // Prepare labels (hours)
+        const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+        
+        // Destroy existing chart if it exists
+        if (window.hourlyDistributionChart) {
+            window.hourlyDistributionChart.destroy();
+        }
+        
+        // Create new chart
+        window.hourlyDistributionChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Attacks',
+                    data: hourlyData,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'white'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'white'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Attacks by Hour of Day',
+                        color: 'white'
+                    }
+                }
+            }
+        });
+    }
+    
+    function updateRiskScoreChart(riskData) {
+        const ctx = document.getElementById('riskScoreChart').getContext('2d');
+        
+        // Update counters
+        document.getElementById('low-risk-count').textContent = riskData.low;
+        document.getElementById('medium-risk-count').textContent = riskData.medium;
+        document.getElementById('high-risk-count').textContent = riskData.high;
+        document.getElementById('critical-risk-count').textContent = riskData.critical;
+        
+        // Prepare data for chart
+        const labels = ['Low Risk', 'Medium Risk', 'High Risk', 'Critical Risk'];
+        const values = [riskData.low, riskData.medium, riskData.high, riskData.critical];
+        const colors = [
+            'rgba(40, 167, 69, 0.8)',  // green for low
+            'rgba(23, 162, 184, 0.8)',  // blue for medium
+            'rgba(255, 193, 7, 0.8)',  // yellow for high
+            'rgba(220, 53, 69, 0.8)'   // red for critical
+        ];
+        
+        // Destroy existing chart if it exists
+        if (window.riskScoreChart) {
+            window.riskScoreChart.destroy();
+        }
+        
+        // Create new chart
+        window.riskScoreChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '50%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'white'
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Risk Score Distribution',
+                        color: 'white'
+                    }
+                }
+            }
+        });
+    }
+    
+    function updateTopAttackersTable(attackers) {
+        const tableBody = document.getElementById('top-attackers-table');
+        
+        // Clear existing rows
+        tableBody.innerHTML = '';
+        
+        if (attackers.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center">No data available</td></tr>';
+            return;
+        }
+        
+        // Add rows for each attacker
+        attackers.forEach(attacker => {
+            const row = document.createElement('tr');
+            
+            // IP cell
+            const ipCell = document.createElement('td');
+            ipCell.textContent = attacker.ip;
+            row.appendChild(ipCell);
+            
+            // Country cell
+            const countryCell = document.createElement('td');
+            countryCell.textContent = attacker.country;
+            row.appendChild(countryCell);
+            
+            // Count cell
+            const countCell = document.createElement('td');
+            countCell.textContent = attacker.count;
+            row.appendChild(countCell);
+            
+            tableBody.appendChild(row);
+        });
+    }
+    
+    function generateColors(count) {
+        const colors = [];
+        for (let i = 0; i < count; i++) {
+            const hue = (i * 137) % 360;  // Use golden angle to space colors evenly
+            colors.push(`hsla(${hue}, 70%, 60%, 0.8)`);
+        }
+        return colors;
+    }
+    
+    function formatDateTime(isoString) {
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleString();
+        } catch (e) {
+            return isoString;
+        }
+    }
+</script>
+{% endblock %}

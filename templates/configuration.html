@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-server"></i> Honeypot Services</h5>
+            </div>
+            <div class="card-body">
+                <form action="/configuration" method="post">
+                    <input type="hidden" name="action" value="start_service">
+                    
+                    <div class="mb-3">
+                        <label for="service_type" class="form-label">Service Type</label>
+                        <select class="form-select" id="service_type" name="service_type" required>
+                            <option value="" selected disabled>Select a service</option>
+                            <option value="ssh">SSH (Secure Shell)</option>
+                            <option value="ftp">FTP (File Transfer Protocol)</option>
+                            <option value="telnet">Telnet</option>
+                            <option value="http">HTTP (Web Server)</option>
+                            <option value="smtp">SMTP (Mail Server)</option>
+                            <option value="mysql">MySQL</option>
+                            <option value="rdp">RDP (Remote Desktop)</option>
+                        </select>
+                        <div class="form-text">Select the type of service to emulate</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="port" class="form-label">Port</label>
+                        <input type="number" class="form-control" id="port" name="port" min="1" max="65535" required>
+                        <div class="form-text">Choose a port between 1-65535. Common ports: SSH (22), FTP (21), Telnet (23), HTTP (80), SMTP (25), MySQL (3306), RDP (3389)</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Start Service
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bell"></i> Notification Settings</h5>
+            </div>
+            <div class="card-body">
+                <form action="/configuration" method="post">
+                    <input type="hidden" name="action" value="save_notification">
+                    
+                    <!-- Email Notifications -->
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="email_enabled" name="email_enabled" {% if notification_settings.email_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="email_enabled">Enable Email Notifications</label>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email_address" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email_address" name="email_address" value="{{ notification_settings.email_address }}">
+                        <div class="form-text">Email address to receive notifications</div>
+                    </div>
+                    
+                    <!-- SMS Notifications -->
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="sms_enabled" name="sms_enabled" {% if notification_settings.sms_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="sms_enabled">Enable SMS Notifications</label>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="phone_number" name="phone_number" value="{{ notification_settings.phone_number }}">
+                        <div class="form-text">Phone number to receive SMS alerts (include country code, e.g., +1234567890)</div>
+                    </div>
+                    
+                    <!-- Webhook Notifications -->
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="webhook_enabled" name="webhook_enabled" {% if notification_settings.webhook_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="webhook_enabled">Enable Webhook Notifications</label>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="webhook_url" class="form-label">Webhook URL</label>
+                        <input type="url" class="form-control" id="webhook_url" name="webhook_url" value="{{ notification_settings.webhook_url }}">
+                        <div class="form-text">URL to receive webhook notifications (e.g., for integration with other security tools)</div>
+                    </div>
+                    
+                    <!-- Notification Settings -->
+                    <div class="mb-3">
+                        <label for="frequency" class="form-label">Notification Frequency</label>
+                        <select class="form-select" id="frequency" name="frequency">
+                            <option value="immediate" {% if notification_settings.frequency == 'immediate' %}selected{% endif %}>Immediate (every attack)</option>
+                            <option value="threshold" {% if notification_settings.frequency == 'threshold' %}selected{% endif %}>Threshold-based</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="threshold" class="form-label">Notification Threshold</label>
+                        <input type="number" class="form-control" id="threshold" name="threshold" min="1" value="{{ notification_settings.threshold }}">
+                        <div class="form-text">Number of attacks before sending a notification (for threshold-based frequency)</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>Note:</strong> For this educational project, notifications are simulated unless API credentials are provided. You can set up:
+                        <ul class="mb-0 mt-1">
+                            <li>Email notifications using SMTP credentials (SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD)</li>
+                            <li>SMS notifications using Twilio (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)</li>
+                        </ul>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Active Honeypot Services</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-dark">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Service Type</th>
+                                <th>Port</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if active_services %}
+                                {% for service_id, (service_type, port, _) in active_services.items() %}
+                                <tr>
+                                    <td>{{ service_id }}</td>
+                                    <td>{{ service_type }}</td>
+                                    <td>{{ port }}</td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>
+                                        <form action="/configuration" method="post">
+                                            <input type="hidden" name="action" value="stop_service">
+                                            <input type="hidden" name="service_id" value="{{ service_id }}">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-stop"></i> Stop
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No honeypot services are currently active</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
